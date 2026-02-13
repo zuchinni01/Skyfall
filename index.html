@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valentine's Request para sa Egg 💜</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Pacifico&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        :root {
+            --peach: #FFD1BA;
+            --lavender: #E0D7FF;
+            --coral: #FF8E8E;
+            --purple: #B388EB;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background: linear-gradient(135deg, var(--peach), var(--lavender));
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Poppins', sans-serif;
+            /* Remove overflow: hidden if you want to be extra safe, 
+               but we'll keep it to prevent scrollbars during the dodge */
+            overflow: hidden; 
+        }
+
+        .bg-hearts {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .floating-heart {
+            position: absolute;
+            font-size: 20px;
+            animation: floatUp 5s linear infinite;
+            opacity: 0;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            20% { opacity: 0.7; }
+            100% { transform: translateY(-10vh) scale(1.5); opacity: 0; }
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 2.5rem;
+            border-radius: 35px;
+            border: 6px solid white;
+            box-shadow: 0 15px 35px rgba(179, 136, 235, 0.3);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            position: relative;
+        }
+
+        .img-container {
+            width: 100%;
+            height: 230px;
+            margin-bottom: 20px;
+            border-radius: 20px;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .meme-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        h1 { 
+            color: var(--purple); 
+            font-family: 'Pacifico', cursive;
+            font-size: 1.8rem;
+            margin: 10px 0;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-top: 25px;
+            min-height: 60px; /* Space for growing Yes button */
+        }
+
+        button {
+            padding: 12px 25px;
+            font-weight: bold;
+            border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            transition: transform 0.2s ease;
+        }
+
+        .btn-yes {
+            background: linear-gradient(45deg, var(--coral), var(--purple));
+            color: white;
+            z-index: 10;
+        }
+
+        .btn-no {
+            background: #f0f0f0;
+            color: #888;
+            /* We use a slightly faster transition for a 'snappier' dodge */
+            transition: left 0.2s ease-out, top 0.2s ease-out;
+            white-space: nowrap;
+            z-index: 9999;
+        }
+
+        .hidden { display: none !important; }
+
+        .pulse { animation: pulse 1.5s infinite; }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .bounce-in { animation: bounceIn 0.8s both; }
+        @keyframes bounceIn {
+            0% { opacity: 0; transform: scale(0.3); }
+            50% { opacity: 1; transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-hearts" id="bg-hearts"></div>
+
+    <audio id="bgMusic" loop>
+        <source src="Elliot James Reay - I Think They Call This Love (Lyrics).mp3" type="audio/mpeg">
+    </audio>
+
+    <audio id="dodgeSound">
+        <source src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="successSound">
+        <source src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="wrapper">
+        <div class="container" id="main-card">
+            <div class="img-container">
+                <img src="pic3.jpg" class="meme-img" id="display-img" alt="Cute meme">
+            </div>
+            <h1 id="question-text">Will you be my Valentine?</h1>
+            <div class="buttons">
+                <button id="yesBtn" class="btn-yes pulse">Yes</button>
+                <button id="noBtn" class="btn-no">No</button>
+            </div>
+        </div>
+
+        <div class="container hidden bounce-in" id="success-page">
+            <div class="img-container">
+                <img src="pic5.jpg" class="meme-img" alt="Happy meme">
+            </div>
+            <h1>dugaya uiee! <br>I Love you Lovelove💜</h1>
+            <p>sufeerrr loveloveee kay tika ekklogg!</p>
+        </div>
+    </div>
+
+    <script>
+        const mainCard = document.getElementById('main-card');
+        const successPage = document.getElementById('success-page');
+        const mainImg = document.getElementById('display-img');
+        const yesBtn = document.getElementById('yesBtn');
+        const noBtn = document.getElementById('noBtn');
+        const music = document.getElementById('bgMusic');
+        const dodgeSound = document.getElementById('dodgeSound');
+        const successSound = document.getElementById('successSound');
+
+        let noClicks = 0;
+        let yesScale = 1;
+
+        const noMemes = ["shems.jpg", "shem2.jpg", "shems3.jpg", "pic4.jpg", "pic3.jpg"];
+        const noTexts = [
+            "No", "Are you sure? ", "Really?? 💔", "NGeeeeeee", 
+            "sumbagay b", "saddenning huhu...", "BASTOSS! 😂", 
+            "Catch me ekkss"
+        ];
+
+        function createHeart() {
+            const heart = document.createElement('div');
+            heart.classList.add('floating-heart');
+            heart.innerHTML = ['❤️', '💜', '✨', '🌸'][Math.floor(Math.random() * 4)];
+            heart.style.left = Math.random() * 100 + 'vw';
+            document.getElementById('bg-hearts').appendChild(heart);
+            setTimeout(() => heart.remove(), 5000);
+        }
+        setInterval(createHeart, 500);
+
+        function moveNoButton() {
+            // DETACH from card and move to body if not already done
+            if (noBtn.style.position !== 'fixed') {
+                document.body.appendChild(noBtn);
+                noBtn.style.position = 'fixed';
+            }
+
+            const padding = 30; // Margin from edges
+            
+            // Re-calculate screen size every time (in case she resizes)
+            const maxX = window.innerWidth - noBtn.offsetWidth - padding;
+            const maxY = window.innerHeight - noBtn.offsetHeight - padding;
+
+            // Generate coordinates
+            const randomX = Math.max(padding, Math.floor(Math.random() * maxX));
+            const randomY = Math.max(padding, Math.floor(Math.random() * maxY));
+
+            noBtn.style.left = randomX + 'px';
+            noBtn.style.top = randomY + 'px';
+            
+            dodgeSound.currentTime = 0;
+            dodgeSound.play().catch(e => {});
+        }
+
+        yesBtn.addEventListener('click', () => {
+            successSound.play();
+            mainCard.classList.add('hidden');
+            successPage.classList.remove('hidden');
+            // Remove the floating No button if it's dodging around
+            if (noBtn.parentElement === document.body) noBtn.remove();
+
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#FF8E8E', '#B388EB', '#FFD1BA']
+            });
+        });
+
+        noBtn.addEventListener('click', () => {
+            noClicks++;
+            music.play().catch(() => {});
+
+            // Yes grows
+            yesScale += 0.5;
+            yesBtn.style.transform = `scale(${yesScale})`;
+
+            // Updates
+            mainImg.src = noMemes[noClicks % noMemes.length];
+            if (noClicks < noTexts.length) {
+                noBtn.innerText = noTexts[noClicks];
+            }
+
+            // Start Dodge
+            if (noClicks >= noTexts.length - 1) {
+                moveNoButton();
+            }
+        });
+
+        noBtn.addEventListener('mouseover', () => {
+            if (noClicks >= noTexts.length - 1) {
+                moveNoButton();
+            }
+        });
+
+        noBtn.addEventListener('touchstart', (e) => {
+            if (noClicks >= noTexts.length - 1) {
+                e.preventDefault();
+                moveNoButton();
+            }
+        });
+    </script>
+</body>
+</html>
